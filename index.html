@@ -137,19 +137,7 @@
             <option value="no">Нет ПВ</option>
           </select>
         </div>
-        <div class="filter-group">
-          <label>Бюджет на строительство</label>
-          <select id="fBudget" onchange="onFilterChange()">
-            <option value="any">Любой</option>
-            <option value="4">до 4 млн</option>
-            <option value="5">до 5 млн</option>
-            <option value="6">до 6 млн</option>
-            <option value="7">до 7 млн</option>
-            <option value="8">до 8 млн</option>
-            <option value="9">до 9 млн</option>
-            <option value="15">от 10 млн+</option>
-          </select>
-        </div>
+
         <div class="filter-group">
           <label>Технология (необязательно)</label>
           <select id="fTech" onchange="onFilterChange()">
@@ -284,12 +272,11 @@ function renderCard(p, rank) {
 function render() {
   if (!dataLoaded) return;
   const pv = document.getElementById('fPV').value;
-  const budget = document.getElementById('fBudget').value;
   const tech = document.getElementById('fTech').value;
 
   let filtered = partners.filter(p => {
     if (pv === 'no' && !String(p.pvNote||'').includes('✅')) return false;
-    if (budget !== 'any' && (p.budgetFrom||0) > parseFloat(budget)) return false;
+
     if (tech !== 'any' && !(p.tech||[]).join(' ').toLowerCase().includes(tech.toLowerCase())) return false;
     return true;
   });
