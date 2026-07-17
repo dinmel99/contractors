@@ -202,7 +202,13 @@ function calcScore(p) {
   if (p.isTop) s += 1000;
   s += (4 - Math.min(p.priority || 3, 3)) * 100;
   if (priority === 'vcl' && p.vcl) s += 60;
-  if (priority === 'commission') s += (p.commissionMax || 5) * 5;
+  if (priority === 'vcl' && !p.vcl) s -= 50;
+  if (String(p.pvNote || '').includes('\u2705')) s += 20;
+  if (priority === 'commission') {
+    const nums = (p.commission || '').match(/\d+/g);
+    const maxPct = nums ? Math.max(...nums.map(Number).filter(n => n <= 20)) : 5;
+    s += maxPct * 5;
+  }
   return s;
 }
 
