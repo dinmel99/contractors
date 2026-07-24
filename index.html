@@ -82,6 +82,7 @@ main{max-width:700px;margin:0 auto;padding:22px 14px 60px}
 
 .morebtn{display:block;width:100%;margin-top:4px;padding:12px;background:transparent;border:1.5px dashed var(--border);border-radius:12px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s}
 .morebtn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+.morebtn.picked{background:#1a6b33;border-color:#1a6b33;color:#fff}
 
 .disc{background:var(--orange-light);border:1px solid #ffd0a0;border-radius:10px;padding:11px 16px;font-size:12px;color:#7a4000;line-height:1.6;margin-top:16px}
 
@@ -164,6 +165,40 @@ const URL = "https://script.google.com/macros/s/AKfycbxCubYuu95uyJPnkaA3_99v8Ezg
 const MEDALS = ["🥇","🥈","🥉"];
 let data = [];
 let showAll = false;
+let CARD_CONTRACTORS = {}; // i -> объект подрядчика, для кнопки "Выбрать"
+
+// ==== СЕССИЯ КЛИЕНТА (общая для инструментов dinmel99.github.io) ====
+const SESSION_KEY = 'izhs_session';
+
+function loadSession(){
+  try{ return JSON.parse(localStorage.getItem(SESSION_KEY)) || {}; }
+  catch(e){ return {}; }
+}
+
+function saveSession(patch){
+  const merged = Object.assign(loadSession(), patch, {updatedAt: Date.now()});
+  localStorage.setItem(SESSION_KEY, JSON.stringify(merged));
+  try{
+    window.parent.postMessage({type:'izhs_session_update', session: merged}, '*');
+  }catch(e){ /* нет родителя — ничего страшного */ }
+}
+
+function selectContractor(i){
+  const p = CARD_CONTRACTORS[i];
+  if(!p) return;
+  // Справочная пометка для агента: подрядчик НЕ идёт в КП — это отдельный этап
+  // воронки («встреча у подрядчика»), сессия хранит его только для ориентира.
+  saveSession({
+    selectedContractor: {
+      name: p.name,
+      technology: (p.tech||[]).join(', '),
+      budgetFrom: p.budgetFrom || '',
+      commission: p.commission || ''
+    }
+  });
+  const btn = document.getElementById('pick-c' + i);
+  if(btn){ btn.textContent = '✓ Отмечено'; btn.classList.add('picked'); }
+}
 
 function score(p) {
   const pri = document.getElementById('fPri').value;
@@ -190,6 +225,7 @@ function pvTag(note) {
 }
 
 function card(p, i) {
+  CARD_CONTRACTORS[i] = p;
   const site = String(p.site || '').replace(/^https?:\/\//,'').replace(/\/$/,'');
   return `<div class="pcard r${i+1}" style="animation-delay:${i*0.06}s">
     <div class="ch">
@@ -218,6 +254,7 @@ function card(p, i) {
           ${site ? `<a class="slink" href="https://${site}" target="_blank">🌐 ${site}</a>` : ''}
         </div>
       </div>
+      <button type="button" id="pick-c${i}" class="morebtn" style="border-style:solid;margin-top:10px;" onclick="selectContractor(${i})" title="Для себя — в КП не попадает">☆ Отметить как подходящего</button>
     </div>
   </div>`;
 }
